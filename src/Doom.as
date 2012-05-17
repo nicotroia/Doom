@@ -12,19 +12,27 @@ package
 	import flash.display.StageScaleMode;
 	import flash.events.DataEvent;
 	import flash.events.Event;
-	import flash.filesystem.File;
+	import flash.events.ProgressEvent;
 	import flash.geom.Rectangle;
 	import flash.net.FileReference;
+	import flash.net.URLLoader;
+	import flash.net.URLLoaderDataFormat;
+	import flash.net.URLRequest;
 	import flash.utils.ByteArray;
+	import flash.utils.Dictionary;
 	
 	[SWF(width="480", height="500")]
 	public class Doom extends Sprite
 	{
-		private var _appDirectory:File;
-		private var _wadDirectory:File;
-		private var _doomWAD:File;
+		//private var _appDirectory:File;
+		//private var _wadDirectory:File;
+		//private var _doomWAD:File;
+		private var _wadLocation:URLRequest;
+		private var _loader:URLLoader;
 		private var _data:ByteArray;
 		private var _wadParser:WADParser;
+		
+		//lumps
 		private var _playpal:ByteArray;
 		
 		//UI
@@ -32,20 +40,7 @@ package
 		private var _outputContainer:Sprite;
 		private var _textArea:TextArea;
 		private var _startButton:PushButton;
-		private var _palette00Button:PushButton;
-		private var _palette01Button:PushButton;
-		private var _palette02Button:PushButton;
-		private var _palette03Button:PushButton;
-		private var _palette04Button:PushButton;
-		private var _palette05Button:PushButton;
-		private var _palette06Button:PushButton;
-		private var _palette07Button:PushButton;
-		private var _palette08Button:PushButton;
-		private var _palette09Button:PushButton;
-		private var _palette10Button:PushButton;
-		private var _palette11Button:PushButton;
-		private var _palette12Button:PushButton;
-		private var _palette13Button:PushButton;
+		private var _paletteButtonDict:Dictionary;
 		private var _paletteButtons:Vector.<PushButton>;
 		
 		private var _testPalette:Bitmap;
@@ -59,6 +54,7 @@ package
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			
 			trace("hello doom");
+			_wadLocation = new URLRequest("assets/wad/DOOM.WAD");
 			_wadParser = new WADParser();
 			_uiContainer = new Sprite();
 			_outputContainer = new Sprite();
@@ -67,15 +63,27 @@ package
 			addChild( _uiContainer );
 			addChild( _outputContainer );
 			
+			/*
+			//AIR ONLY
 			_appDirectory = File.applicationDirectory;
 			_wadDirectory = _appDirectory.resolvePath("assets"+File.separator+"wad");
-			
 			_doomWAD = _wadDirectory.resolvePath("DOOM.WAD");			
 			_doomWAD.addEventListener(Event.COMPLETE, loadCompleteHandler);
+			*/
 			
-			initUI();
+			_loader = new URLLoader();
+			_loader.dataFormat = URLLoaderDataFormat.BINARY;
+			_loader.addEventListener(ProgressEvent.PROGRESS, loaderProgressHandler, false, 0, true);
+			_loader.addEventListener(Event.COMPLETE, loadCompleteHandler, false, 0, true);
+			
+			initPaletteLumpUI();
 			
 			stage.addEventListener(Event.RESIZE, stageResizeHandler);
+		}
+		
+		protected function loaderProgressHandler(event:ProgressEvent):void
+		{
+			trace(event.bytesLoaded/event.bytesTotal);
 		}
 		
 		protected function stageResizeHandler(event:Event):void
@@ -89,29 +97,27 @@ package
 			if( _textArea ) _textArea.height = stage.stageHeight - 85;
 		}
 		
-		private function initUI():void
+		private function initPaletteLumpUI():void
 		{
+			_paletteButtons = new Vector.<PushButton>();
+			
 			_startButton = new PushButton(_uiContainer, 7, 7, "Load DOOM.WAD", function():void { 
-				_doomWAD.load();
+				_loader.load(_wadLocation);
+				//_doomWAD.load(); //AIR only
 				_startButton.enabled = false;
 			});
 			
-			_palette00Button = new PushButton( _uiContainer, 7, _startButton.y + _buttonUIPadding, "Load Palette 00", function():void { loadPalette(0); });
-			_palette01Button = new PushButton( _uiContainer, 7, _palette00Button.y + _buttonUIPadding, "Load Palette 01", function():void { loadPalette(1); });
-			_palette02Button = new PushButton( _uiContainer, 7, _palette01Button.y + _buttonUIPadding, "Load Palette 02", function():void { loadPalette(2); });
-			_palette03Button = new PushButton( _uiContainer, 7, _palette02Button.y + _buttonUIPadding, "Load Palette 03", function():void { loadPalette(3); });
-			_palette04Button = new PushButton( _uiContainer, 7, _palette03Button.y + _buttonUIPadding, "Load Palette 04", function():void { loadPalette(4); });
-			_palette05Button = new PushButton( _uiContainer, 7, _palette04Button.y + _buttonUIPadding, "Load Palette 05", function():void { loadPalette(5); });
-			_palette06Button = new PushButton( _uiContainer, 7, _palette05Button.y + _buttonUIPadding, "Load Palette 06", function():void { loadPalette(6); });
-			_palette07Button = new PushButton( _uiContainer, 7, _palette06Button.y + _buttonUIPadding, "Load Palette 07", function():void { loadPalette(7); });
-			_palette08Button = new PushButton( _uiContainer, 7, _palette07Button.y + _buttonUIPadding, "Load Palette 08", function():void { loadPalette(8); });
-			_palette09Button = new PushButton( _uiContainer, 7, _palette08Button.y + _buttonUIPadding, "Load Palette 09", function():void { loadPalette(9); });
-			_palette10Button = new PushButton( _uiContainer, 7, _palette09Button.y + _buttonUIPadding, "Load Palette 10", function():void { loadPalette(10); });
-			_palette11Button = new PushButton( _uiContainer, 7, _palette10Button.y + _buttonUIPadding, "Load Palette 11", function():void { loadPalette(11); });
-			_palette12Button = new PushButton( _uiContainer, 7, _palette11Button.y + _buttonUIPadding, "Load Palette 12", function():void { loadPalette(12); });
-			_palette13Button = new PushButton( _uiContainer, 7, _palette12Button.y + _buttonUIPadding, "Load Palette 13", function():void { loadPalette(13); });
+			_paletteButtonDict = new Dictionary();
 			
-			_paletteButtons = new <PushButton>[_palette00Button, _palette01Button, _palette02Button, _palette03Button, _palette04Button, _palette05Button, _palette06Button, _palette07Button, _palette08Button, _palette09Button, _palette10Button, _palette11Button, _palette12Button, _palette13Button];
+			for( var i:uint = 0; i < 14; i++ ) { 
+				var startX:uint = 7;
+				var startY:uint = (i == 0) ? (_startButton.y + _buttonUIPadding) : (_paletteButtons[(i-1)].y + _buttonUIPadding);
+				var label:String = "Palette " + ((i > 9) ? i.toString() : "0"+i.toString());
+				var pb:PushButton = new PushButton(_uiContainer, startX, startY, label, loadPalette);
+				
+				_paletteButtonDict[pb] = i;
+				_paletteButtons.push(pb);
+			}
 			
 			for each( var paletteButton:PushButton in _paletteButtons ) { 
 				paletteButton.enabled = false;
@@ -122,8 +128,12 @@ package
 		
 		protected function loadCompleteHandler(event:Event):void
 		{
-			trace("successfully loaded " + event.target.name);
-			_data = event.target.data;
+			_loader.removeEventListener(ProgressEvent.PROGRESS, loaderProgressHandler);
+			_loader.removeEventListener(Event.COMPLETE, loadCompleteHandler);
+			
+			trace("successfully loaded " + _wadLocation.url);
+			
+			_data = _loader.data;
 			
 			_wadParser.parse(_data);
 			
@@ -132,9 +142,10 @@ package
 			}
 		}
 		
-		private function loadPalette(paletteNumber:uint):void
+		private function loadPalette(event:Event = null):void
 		{
-			if( paletteNumber > 13 ) return;
+			var paletteNumber:uint = _paletteButtonDict[event.target];
+			//if( paletteNumber > 13 ) return;
 			
 			//14 color palettes, each 768-bytes (256 rgb triple)
 			

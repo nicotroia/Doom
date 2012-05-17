@@ -58,7 +58,7 @@ package com.desktop.doom
 			
 			var targetLump:ByteArray = new ByteArray();
 			var lumpOffset:int = lumps[lumpName][0];
-			var lumpSize:int = lumps[lumpName][1];
+			var lumpSize:int = lumps[lumpName][1] + 12093;
 			
 			trace("+ Getting Lump: " + lumpName + " ... " + lumpSize + "b");
 			
