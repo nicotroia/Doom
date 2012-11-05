@@ -21,6 +21,8 @@ package com.desktop.doom
 		
 		public function createPWAD():void
 		{
+			trace("Create PWAD");
+			
 			_desktopDir = File.desktopDirectory;
 			_file = _desktopDir.resolvePath("pwad_output" + File.separator + "pwad_" + (new Date().time).toString() + ".WAD" );
 			if( ! _file.parent.exists ) _file.parent.createDirectory();
@@ -36,7 +38,6 @@ package com.desktop.doom
 			
 			_header.writeUTFBytes("PWAD"); //4-byte "type"
 			_header.writeInt(1); //4-byte (long) number of lumps
-			//write directory position after lumps
 			
 			//1+ lumps
 			_lumps = new ByteArray();
@@ -57,30 +58,29 @@ package com.desktop.doom
 			_pwad.writeBytes(_lumps);
 			_pwad.writeBytes(_directory);
 			
-			trace("total PWAD size: " + _pwad.length + "b");
+			trace(" total size: " + _pwad.length + "b");
 			
 			//Write PWAD to file.
 			_stream.open(_file, FileMode.WRITE);
 			_stream.writeBytes(_pwad);
 			_stream.close();
+			
+			trace("Write SUCCESS");
 		}
 		
 		private function writeLumpPLAYPAL():void
 		{
-			var r:int = 0x0;
-			var g:int = 0x9c;
-			var b:int = 0x2b;
 			var rainbow:ByteArray = new ByteArray();
 			var colorIndex:int = 256;
 			var paletteIndex:int = 14;
 			
-			while( paletteIndex-- > 0 ) 
+			while( paletteIndex-- > 0 ) //14 palettes
 			{ 
-				while( colorIndex-- > 0 ) 
+				while( colorIndex-- > 0 ) //256 colors per palette
 				{ 
-					rainbow.writeByte(r);
-					rainbow.writeByte(g);
-					rainbow.writeByte(b);
+					rainbow.writeByte(Math.random() * 255); //r
+					rainbow.writeByte(Math.random() * 255); //g
+					rainbow.writeByte(Math.random() * 255); //b
 				}
 				
 				colorIndex = 256;

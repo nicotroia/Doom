@@ -16,18 +16,17 @@ package com.desktop.doom
 			lumps = new Dictionary();
 			
 			trace("Parsing WAD...");
-			trace("", "HEADER: ");
 			
-			_wad.endian = Endian.LITTLE_ENDIAN; //?
+			_wad.endian = Endian.LITTLE_ENDIAN;
 			
 			var type:String = _wad.readUTFBytes(4); //4-byte ascii string
-			trace(" ", "type:", type); //IWAD
+			trace("", "type:", type); //IWAD
 			
 			var numberOfLumps:int = _wad.readInt(); //4-byte signed int 
-			trace(" ", "lumps:", numberOfLumps); //2306
+			trace("", "lumps:", numberOfLumps); //2306
 			
 			var infoTableOffset:int = _wad.readInt(); //4-byte signed int
-			trace(" ", "info table offset:", infoTableOffset); //12371396
+			trace("", "info table offset:", infoTableOffset); //12371396
 			
 			_wad.position = infoTableOffset;
 			
