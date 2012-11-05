@@ -9,14 +9,10 @@ package com.desktop.doom
 		public var lumps:Dictionary;
 		
 		private var _wad:ByteArray;
-		private var _infoTableString:String;
-		
-		public function get infoTableString():String { return _infoTableString; }
 		
 		public function parse(wad:ByteArray):Boolean
 		{
 			_wad = wad;
-			_infoTableString = '';
 			lumps = new Dictionary();
 			
 			trace("Parsing WAD...");
@@ -43,10 +39,11 @@ package com.desktop.doom
 				var lumpSize:int = _wad.readInt(); //4-byte signed int
 				var lumpName:String = _wad.readUTFBytes(8); //8-byte ascii string
 				
+				//_wad.position -= 8; trace(_wad.readUTFBytes(8));	
+				
 				lumps[lumpName] = [lumpOffset, lumpSize];
-				_infoTableString += "Entry " + i + ": " + lumpName + " ... \t\t" + lumpSize +" b ... \t" + "@ "+ lumpOffset + "\n";
-
-				//trace("", "Entry " + i + ": ... " + lumpName + " ... \t\t" + lumpSize +" b ... \t", "@ "+ lumpOffset);
+				
+				//trace("", "Entry " + i + ": ... \t " + lumpName + " ... \t" + lumpSize +" b ... \t", "@ "+ lumpOffset);
 			}
 			
 			return true;

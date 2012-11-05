@@ -4,6 +4,7 @@ package
 	import com.bit101.components.PushButton;
 	import com.bit101.components.TextArea;
 	import com.desktop.doom.WADParser;
+	import com.desktop.doom.WADWriter;
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -17,7 +18,7 @@ package
 	import flash.net.FileReference;
 	import flash.utils.ByteArray;
 	
-	[SWF(width="480", height="500")]
+	[SWF(width="640", height="480")]
 	public class Doom extends Sprite
 	{
 		private var _appDirectory:File;
@@ -25,13 +26,14 @@ package
 		private var _doomWAD:File;
 		private var _data:ByteArray;
 		private var _wadParser:WADParser;
+		private var _wadWriter:WADWriter;
 		private var _playpal:ByteArray;
 		
 		//UI
 		private var _uiContainer:Sprite;
 		private var _outputContainer:Sprite;
-		private var _textArea:TextArea;
 		private var _startButton:PushButton;
+		private var _testWriteButton:PushButton;
 		private var _palette00Button:PushButton;
 		private var _palette01Button:PushButton;
 		private var _palette02Button:PushButton;
@@ -59,7 +61,10 @@ package
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			
 			trace("hello doom");
+			
 			_wadParser = new WADParser();
+			_wadWriter = new WADWriter();
+			
 			_uiContainer = new Sprite();
 			_outputContainer = new Sprite();
 			_outputContainer.x = 125;
@@ -85,8 +90,7 @@ package
 		
 		private function drawUI(event:Event = null):void
 		{
-			if( _textArea ) _textArea.width = stage.stageWidth - 42;
-			if( _textArea ) _textArea.height = stage.stageHeight - 85;
+			
 		}
 		
 		private function initUI():void
@@ -94,6 +98,10 @@ package
 			_startButton = new PushButton(_uiContainer, 7, 7, "Load DOOM.WAD", function():void { 
 				_doomWAD.load();
 				_startButton.enabled = false;
+			});
+			
+			_testWriteButton = new PushButton(_uiContainer, 150, 7, "Write PWAD", function():void { 
+				_wadWriter.createPWAD();
 			});
 			
 			_palette00Button = new PushButton( _uiContainer, 7, _startButton.y + _buttonUIPadding, "Load Palette 00", function():void { loadPalette(0); });
@@ -151,10 +159,10 @@ package
 			
 			_playpal.position = 768 * paletteNumber;
 			
-			for( var x:uint = 0; x < paletteWidth; x += cellWidth ) { 
-				
-				for( var y:uint = 0; y < paletteWidth; y += cellWidth ) { 
-					
+			for( var x:uint = 0; x < paletteWidth; x += cellWidth ) 
+			{ 
+				for( var y:uint = 0; y < paletteWidth; y += cellWidth ) 
+				{ 
 					a = 0xff;
 					r = _playpal.readUnsignedByte();
 					g = _playpal.readUnsignedByte();
@@ -165,8 +173,8 @@ package
 					//trace("x: " + x + " y: " + y + " ... r: " + r.toString(16) + " g: " + g.toString(16) + " b: " + b.toString(16) + " == 0x" + color.toString(16) );
 					_paletteBMD.fillRect(new Rectangle(x, y, cellWidth, cellWidth), color);
 				}
-				
 			}
+			
 		}
 	}
 }
