@@ -4,6 +4,7 @@ package
 	import com.bit101.components.PushButton;
 	import com.bit101.components.TextArea;
 	import com.desktop.doom.WADParser;
+	import com.desktop.doom.WADStream;
 	import com.desktop.doom.WADWriter;
 	
 	import flash.display.Bitmap;
@@ -21,12 +22,11 @@ package
 	[SWF(width="640", height="480")]
 	public class Doom extends Sprite
 	{
+		private var _wadStream:WADStream;
 		private var _appDirectory:File;
 		private var _wadDirectory:File;
 		private var _doomWAD:File;
 		private var _data:ByteArray;
-		private var _wadParser:WADParser;
-		private var _wadWriter:WADWriter;
 		private var _playpal:ByteArray;
 		
 		//UI
@@ -62,8 +62,7 @@ package
 			
 			trace("hello doom");
 			
-			_wadParser = new WADParser();
-			_wadWriter = new WADWriter();
+			_wadStream = new WADStream();
 			
 			_uiContainer = new Sprite();
 			_outputContainer = new Sprite();
@@ -75,7 +74,7 @@ package
 			_appDirectory = File.applicationDirectory;
 			_wadDirectory = _appDirectory.resolvePath("assets"+File.separator+"wad");
 			
-			_doomWAD = _wadDirectory.resolvePath("DOOM.WAD");			
+			_doomWAD = _wadDirectory.resolvePath("rainbow_colors.WAD"); //"DOOM.WAD");			
 			_doomWAD.addEventListener(Event.COMPLETE, loadCompleteHandler);
 			
 			initUI();
@@ -101,7 +100,7 @@ package
 			});
 			
 			_testWriteButton = new PushButton(_uiContainer, 150, 7, "Write PWAD", function():void { 
-				_wadWriter.createPWAD();
+				_wadStream.createPWAD();
 			});
 			
 			_palette00Button = new PushButton( _uiContainer, 7, _startButton.y + _buttonUIPadding, "Load Palette 00", function():void { loadPalette(0); });
@@ -133,7 +132,7 @@ package
 			trace("successfully loaded " + event.target.name);
 			_data = event.target.data;
 			
-			_wadParser.parse(_data);
+			_wadStream.parse(_data);
 			
 			for each( var paletteButton:PushButton in _paletteButtons ) { 
 				paletteButton.enabled = true;
@@ -155,7 +154,7 @@ package
 			_testPalette.y = 7;
 			
 			if( ! _outputContainer.contains(_testPalette) ) _outputContainer.addChild(_testPalette);
-			_playpal = (_playpal) ? _playpal : _wadParser.getLump('PLAYPAL');
+			_playpal = (_playpal) ? _playpal : _wadStream.getLump('PLAYPAL');
 			
 			_playpal.position = 768 * paletteNumber;
 			
