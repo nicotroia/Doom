@@ -74,7 +74,7 @@ package
 			_appDirectory = File.applicationDirectory;
 			_wadDirectory = _appDirectory.resolvePath("assets"+File.separator+"wad");
 			
-			_doomWAD = _wadDirectory.resolvePath("rainbow_colors.WAD"); //"DOOM.WAD");			
+			_doomWAD = _wadDirectory.resolvePath("DOOM.WAD"); //"rainbow_colors.WAD");
 			_doomWAD.addEventListener(Event.COMPLETE, loadCompleteHandler);
 			
 			initUI();
