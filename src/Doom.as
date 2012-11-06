@@ -4,8 +4,6 @@ package
 	import com.bit101.components.PushButton;
 	import com.bit101.components.TextArea;
 	import com.desktop.doom.WADParser;
-	import com.desktop.doom.WADStream;
-	import com.desktop.doom.WADWriter;
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -22,7 +20,7 @@ package
 	[SWF(width="640", height="480")]
 	public class Doom extends Sprite
 	{
-		private var _wadStream:WADStream;
+		private var _wadStream:WADParser;
 		private var _appDirectory:File;
 		private var _wadDirectory:File;
 		private var _doomWAD:File;
@@ -62,7 +60,7 @@ package
 			
 			trace("hello doom");
 			
-			_wadStream = new WADStream();
+			_wadStream = new com.desktop.doom.WADParser();
 			
 			_uiContainer = new Sprite();
 			_outputContainer = new Sprite();
@@ -100,7 +98,9 @@ package
 			});
 			
 			_testWriteButton = new PushButton(_uiContainer, 150, 7, "Write PWAD", function():void { 
-				_wadStream.createPWAD();
+				_wadStream.startPWAD();
+				writeLumpPLAYPAL();
+				_wadStream.endPWAD();
 			});
 			
 			_palette00Button = new PushButton( _uiContainer, 7, _startButton.y + _buttonUIPadding, "Load Palette 00", function():void { loadPalette(0); });
@@ -122,9 +122,31 @@ package
 			
 			for each( var paletteButton:PushButton in _paletteButtons ) { 
 				paletteButton.enabled = false;
+				paletteButton.visible = false;
 			}
 			
 			drawUI(null);
+		}
+		
+		private function writeLumpPLAYPAL():void
+		{
+			var rainbow:ByteArray = new ByteArray();
+			var colorIndex:int = 256;
+			var paletteIndex:int = 14;
+			
+			while( paletteIndex-- > 0 ) //14 palettes
+			{ 
+				while( colorIndex-- > 0 ) //256 colors per palette
+				{ 
+					rainbow.writeByte(Math.random() * 255); //r
+					rainbow.writeByte(Math.random() * 255); //g
+					rainbow.writeByte(Math.random() * 255); //b
+				}
+				
+				colorIndex = 256;
+			}
+			
+			_wadStream.writeLump(rainbow, "PLAYPAL");
 		}
 		
 		protected function loadCompleteHandler(event:Event):void
@@ -136,6 +158,7 @@ package
 			
 			for each( var paletteButton:PushButton in _paletteButtons ) { 
 				paletteButton.enabled = true;
+				paletteButton.visible = true;
 			}
 		}
 		

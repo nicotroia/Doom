@@ -7,7 +7,7 @@ package com.desktop.doom
 	import flash.utils.Dictionary;
 	import flash.utils.Endian;
 
-	public class WADStream
+	public class WADParser
 	{
 		private const HEADER_LENGTH:int = 12;
 		
@@ -76,7 +76,7 @@ package com.desktop.doom
 			return targetLump;
 		}
 		
-		public function createPWAD():void
+		public function startPWAD():void
 		{
 			trace("Create PWAD");
 			
@@ -98,58 +98,39 @@ package com.desktop.doom
 			//1+ lumps
 			_lumps = new ByteArray();
 			_lumps.endian = Endian.LITTLE_ENDIAN;
-			
-			writeLumpPLAYPAL();
-			
+		}
+		
+		public function writeLump( lump:ByteArray, name:String ):void
+		{
+			_lumps.writeBytes(lump);
+			_lumpInfo.push([lump.length, name]);
+		}
+		
+		public function endPWAD():void
+		{
 			_header.writeInt(HEADER_LENGTH + _lumps.length); //4-byte (long) directory start offset
 			
-			//Info table (names, offsets, sizes of lumps)
-			_directory = new ByteArray();
-			_directory.endian = Endian.LITTLE_ENDIAN;
-			
-			writeDirectory();
+			createDirectory();
 			
 			//combine _header + _lumps + _directory
 			_pwad.writeBytes(_header);
 			_pwad.writeBytes(_lumps);
 			_pwad.writeBytes(_directory);
 			
-			trace(" total size: " + _pwad.length + "b");
-			
 			//Write PWAD to file.
 			_stream.open(_file, FileMode.WRITE);
 			_stream.writeBytes(_pwad);
 			_stream.close();
 			
-			trace("Write SUCCESS");
+			trace("Write SUCCESS. total size: " + _pwad.length + "b");
 		}
 		
-		private function writeLumpPLAYPAL():void
+		private function createDirectory():void
 		{
-			var rainbow:ByteArray = new ByteArray();
-			var colorIndex:int = 256;
-			var paletteIndex:int = 14;
+			//Directory has one 16-byte entry for every lump (names, offsets, sizes of lumps)
 			
-			while( paletteIndex-- > 0 ) //14 palettes
-			{ 
-				while( colorIndex-- > 0 ) //256 colors per palette
-				{ 
-					rainbow.writeByte(Math.random() * 255); //r
-					rainbow.writeByte(Math.random() * 255); //g
-					rainbow.writeByte(Math.random() * 255); //b
-				}
-				
-				colorIndex = 256;
-			}
-			
-			_lumps.writeBytes(rainbow);
-			
-			_lumpInfo.push([rainbow.length, "PLAYPAL"]);
-		}
-		
-		private function writeDirectory():void
-		{
-			//Directory has one 16-byte entry for every lump
+			_directory = new ByteArray();
+			_directory.endian = Endian.LITTLE_ENDIAN;
 			
 			var lumpOffset:uint = HEADER_LENGTH;
 			
